@@ -23,17 +23,114 @@
 [![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
 
 ## Цель работы
-Ознакомиться с основными операторами зыка Python на примере реализации линейной регрессии.
+Познакомиться с программными средствами для организции передачи данных между инструментами google, Python и Unity
 
 ## Задание 1
 Ход работы:
-- Для Python в отчете привести скриншоты с демонстрацией сохранения
-документа google.colab на свой диск с запуском программы, выводящей сообщение Hello World.
-![image](https://user-images.githubusercontent.com/29748577/192314045-5584e489-deaa-4328-b0e9-bcf2e1364d14.png)
-- Ссылка на документ google.colab: https://colab.research.google.com/drive/1ULsgCPGkYmEMN6bCasoAMInEIi2wAjcA?usp=sharing
-- Для Unity в отчете привести скришноты вывода сообщения Hello
-World в консоль.
-![image](https://user-images.githubusercontent.com/29748577/192314301-113a6baf-572e-4af4-9cf5-4bdd7e0e3aa1.png)
+Реализовать совместную работу и передачу данных в связке Python- Google-Sheets – Unity.
+- В облачном сервисе google console подключить API для работы с google sheets и google drive.
+![image](https://user-images.githubusercontent.com/29748577/195107335-7c979093-39b1-4fb4-a69c-a517345381e9.png)
+- Реализовать запись данных из скрипта на python в google-таблицу. Данные описывают изменение темпа инфляции на протяжении 11 отсчётных периодов, с учётом стоимости игрового объекта в каждый период.
+Генерация чисел: ![image](https://user-images.githubusercontent.com/29748577/195107706-e020459b-37e7-48e9-8e03-563cd91662ed.png)
+Запись в гугл таблицу: ![image](https://user-images.githubusercontent.com/29748577/195107979-3f663f9f-0201-4c33-8485-f3b464e44fd5.png)
+- Создать новый проект на Unity, который будет получать данные из google-таблицы, в которую были записаны данные в предыдущем пункте.
+![image](https://user-images.githubusercontent.com/29748577/195108582-c5e38666-3fb2-4992-a507-1751fefca984.png)
+- Написать функционал на Unity, в котором будет воспризводиться аудио-файл в зависимости от значения данных из таблицы.
+Скриншот из Unity: ![image](https://user-images.githubusercontent.com/29748577/195109203-0de58b92-eaf3-40d8-9b99-d73acbb6c693.png)
+Код скрипта:
+```py
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Networking;
+using SimpleJSON;
+
+public class NewBehaviourScript : MonoBehaviour
+{
+    public AudioClip goodSpeak;
+    public AudioClip normalSpeak;
+    public AudioClip badSpeak;
+    private AudioSource selectAudio;
+    private Dictionary<string,float> dataSet = new Dictionary<string, float>();
+    private bool statusStart = false;
+    private int i = 1;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        StartCoroutine(GoogleSheets());
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (dataSet["Mon_" + i.ToString()] <= 10 & statusStart == false & i != dataSet.Count)
+        {
+            StartCoroutine(PlaySelectAudioGood());
+            Debug.Log(dataSet["Mon_" + i.ToString()]);
+        }
+
+        if (dataSet["Mon_" + i.ToString()] > 10 & dataSet["Mon_" + i.ToString()] < 100 & statusStart == false & i != dataSet.Count)
+        {
+            StartCoroutine(PlaySelectAudioNormal());
+            Debug.Log(dataSet["Mon_" + i.ToString()]);
+        }
+
+        if (dataSet["Mon_" + i.ToString()] >= 100 & statusStart == false & i != dataSet.Count)
+        {
+            StartCoroutine(PlaySelectAudioBad());
+            Debug.Log(dataSet["Mon_" + i.ToString()]);
+        }
+    }
+
+    IEnumerator GoogleSheets()
+    {
+        UnityWebRequest curentResp = UnityWebRequest.Get("https://sheets.googleapis.com/v4/spreadsheets/1Uvav6XaYcGg3mDLhNo8hEkHhsjnl72Ar_S51Y_qFCQc/values/Лист1?key=AIzaSyD_iIQAKPc3KEGTseo2la69RLaPQ8B_gY0");
+        yield return curentResp.SendWebRequest();
+        string rawResp = curentResp.downloadHandler.text;
+        var rawJson = JSON.Parse(rawResp);
+        foreach (var itemRawJson in rawJson["values"])
+        {
+            var parseJson = JSON.Parse(itemRawJson.ToString());
+            var selectRow = parseJson[0].AsStringList;
+            dataSet.Add(("Mon_" + selectRow[0]), float.Parse(selectRow[2]));
+        }
+    }
+
+    IEnumerator PlaySelectAudioGood()
+    {
+        statusStart = true;
+        selectAudio = GetComponent<AudioSource>();
+        selectAudio.clip = goodSpeak;
+        selectAudio.Play();
+        yield return new WaitForSeconds(3);
+        statusStart = false;
+        i++;
+    }
+    IEnumerator PlaySelectAudioNormal()
+    {
+        statusStart = true;
+        selectAudio = GetComponent<AudioSource>();
+        selectAudio.clip = normalSpeak;
+        selectAudio.Play();
+        yield return new WaitForSeconds(3);
+        statusStart = false;
+        i++;
+    }
+    IEnumerator PlaySelectAudioBad()
+    {
+        statusStart = true;
+        selectAudio = GetComponent<AudioSource>();
+        selectAudio.clip = badSpeak;
+        selectAudio.Play();
+        yield return new WaitForSeconds(4);
+        statusStart = false;
+        i++;
+    }
+}
+
+```
 
 ## Задание 2
 ### В разделе «ход работы» пошагово выполнить каждый пункт сописанием и примером реализации задачи по теме лабораторной работы.
