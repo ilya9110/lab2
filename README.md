@@ -214,7 +214,90 @@ while i <= len(mon):
 Скриншот: 
 ![image](https://user-images.githubusercontent.com/29748577/195120159-0787b0bf-1bc2-4ed6-bb0f-22f175d4d5a7.png)
 
+## Задание 3
+### Самостоятельно разработать сценарий воспроизведения звукового сопровождения в Unity в зависимости от изменения считанных данных в задании 2
+Ход работы:
 
+```py
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Networking;
+using SimpleJSON;
+
+public class NewBehaviourScript : MonoBehaviour
+{
+    public AudioClip GoodSpeak;
+    public AudioClip NormalSpeak;
+    public AudioClip BadSpeak;
+    private AudioSource selectAudio;
+    private Dictionary<string, float> dataSet = new Dictionary<string, float>();
+    private bool statusStart = false;
+    private int i = 1;
+
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        StartCoroutine(GoogleSheets());
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (CheckInflation(int.MinValue, 10))
+        {
+            StartCoroutine(PlaySelectAudioMode(GoodSpeak));
+            Debug.Log(dataSet["Mon_" + i.ToString()]);
+        }
+
+        if (CheckInflation(10, 100))
+        {
+            StartCoroutine(PlaySelectAudioMode(NormalSpeak));
+            Debug.Log(dataSet["Mon_" + i.ToString()]);
+        }
+
+        if (CheckInflation(100, int.MaxValue))
+        {
+            StartCoroutine(PlaySelectAudioMode(BadSpeak));
+            Debug.Log(dataSet["Mon_" + i.ToString()]);
+        }
+    }
+
+    bool CheckInflation(int min, int max)
+    {
+        var value = dataSet["Mon_" + i.ToString()];
+        return value >= min & value <= max & statusStart == false & i != dataSet.Count;
+    }
+
+    IEnumerator GoogleSheets()
+    {
+        UnityWebRequest curentResp = UnityWebRequest.Get("https://sheets.googleapis.com/v4/spreadsheets/1Iji8SOdY2JcdGTF19Nd0O2aQLkdRdeoAxntz2xZPICE/values/Лист1?key=AIzaSyAxo_3QPnebOrbOnnwIJxtKjy83Wz9t4lE");
+        yield return curentResp.SendWebRequest();
+        string RawResp = curentResp.downloadHandler.text;
+        var rawJson = JSON.Parse(RawResp);
+        foreach (var itemRawJson in rawJson["values"])
+        {
+            var parseJson = JSON.Parse(itemRawJson.ToString());
+            var selectRow = parseJson[0].AsStringList;
+            dataSet.Add(("Mon_" + selectRow[0]), float.Parse(selectRow[2]));
+        }
+    }
+
+    IEnumerator PlaySelectAudioMode(AudioClip mode)
+    {
+        statusStart = true;
+        selectAudio = GetComponent<AudioSource>();
+        selectAudio.clip = mode;
+        selectAudio.Play();
+        yield return new WaitForSeconds(4);
+        statusStart = false;
+        i++;
+    }
+}
+
+```
 
 ## Выводы
 
