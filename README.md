@@ -211,8 +211,10 @@ while i <= len(mon):
 
 
 ```
-Скриншот: 
+Скриншот GoogleSheets: 
 ![image](https://user-images.githubusercontent.com/29748577/195120159-0787b0bf-1bc2-4ed6-bb0f-22f175d4d5a7.png)
+Скриншот PyCharm:![image](https://user-images.githubusercontent.com/29748577/195124478-bc66faae-fd3f-4c8d-aa6a-adae01fb5895.png)
+
 
 ## Задание 3
 ### Самостоятельно разработать сценарий воспроизведения звукового сопровождения в Unity в зависимости от изменения считанных данных в задании 2
